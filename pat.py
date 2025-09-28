@@ -1,12 +1,14 @@
 from datetime import date, datetime, timedelta
+
 from requests import post
 from requests.structures import CaseInsensitiveDict
 
 class Access:
     def __init__(self, email, pwd):
         token = Token(email, pwd)
-        self.signal = Signal(token)
-        self.ticker = Ticker(token)
+        self.daily = Daily(token)
+        self.score = Score(token)
+        self.universe = Universe(token)
 
 class Net:
     # URL = 'https://lefuture.kr/futurebot/api'
@@ -31,24 +33,89 @@ class Net:
 
         return None
 
-class Signal(Net):
-    ADD = '/pat/data/adds'
-    REMOVE = '/pat/data/removes'
-    REMOVE_DT = '/pat/data/removes/date'
-    SEARCH = '/pat/search'
-    SAMPLE = '/pat/sample'
+class Daily(Net):
+    ADD = '/pat/daily/adds'
+    REMOVE = '/pat/daily/removes'
+    REMOVE_DT = '/pat/daily/removes/date'
+    CLEAR = '/pat/daily/clear'
+    SEARCH = '/pat/daily/search'
+    SAMPLE = '/pat/daily/sample'
+
+    class Type:
+        BUY = 'BUY'
+        SELL = 'SELL'
+        HOLD = 'HOLD'
 
     class Sort:
         PM = 'perma'
         TK = 'ticker'
         NM = 'name'
-        EN_DT = 'date'
+        DT = 'date'
+        PRC = 'price'
+        EN_DT = 'enterDate'
         EN_PRC = 'enterPrice'
-        EN_TRD = 'enterTradeVal'
-        EX_DT = 'exitDate'
-        EX_PRC = 'exitPrice'
-        EX_TRD = 'exitTradeVal'
-        RP = 'returnPer'
+        SCR = 'score'
+        RT = 'returns'
+        RV = 'revision'
+        CR = 'creation'
+
+    def __init__(self, token):
+        self.token: Token = token
+
+    def adds(self, data, tp=Type.BUY):
+        return self.success(post(self.URL + self.ADD + '/' + tp, headers=self.token.headers_by_json, json={'list': data}))
+
+    def removes(self, ids):
+        return self.success(post(self.URL + self.REMOVE, headers=self.token.headers_by_json, json={'list': ids}))
+
+    def removes_by_date(self, start=date.today(), end=date.today(), tp=Type.BUY):
+        return self.success(post(
+            self.URL + self.REMOVE_DT + '/' + tp,
+            headers=self.token.headers,
+            params={'start': start, 'end': end}
+        ))
+
+    def clear(self, tp=Type.BUY):
+        return self.success(post(self.URL + self.CLEAR + '/' + tp, headers=self.token.headers))
+
+    def search(
+            self,
+            start=date.today(),
+            end=date.today(),
+            text='',
+            page=0,
+            size=10,
+            sort=Sort.EN_DT,
+            desc=True,
+            tp=Type.BUY
+    ):
+
+        return self.response(post(self.URL + self.SEARCH + '/' + tp, headers=self.token.headers, params={
+            'start': start,
+            'end': end,
+            'text': text,
+            'page': page,
+            'size': size,
+            'sort': sort,
+            'desc': desc
+        }))
+
+    def sample(self, tp=Type.BUY):
+        return self.response(post(self.URL + self.SAMPLE + '/' + tp, headers=self.token.headers))
+
+class Score(Net):
+    ADD = '/pat/score/adds'
+    REMOVE = '/pat/score/removes'
+    REMOVE_DT = '/pat/score/removes/date'
+    SEARCH = '/pat/score/search'
+
+    class Sort:
+        PM = 'perma'
+        TK = 'ticker'
+        NM = 'name'
+        DT = 'date'
+        PRC = 'close'
+        SCR = 'score'
         RV = 'revision'
         CR = 'creation'
 
@@ -59,7 +126,7 @@ class Signal(Net):
         return self.success(post(self.URL + self.ADD, headers=self.token.headers_by_json, json={'list': data}))
 
     def removes(self, ids):
-        return self.success(post(self.URL + self.REMOVE, headers=self.token.headers, params={'ids': ids}))
+        return self.success(post(self.URL + self.REMOVE, headers=self.token.headers_by_json, json={'list': ids}))
 
     def removes_by_date(self, start=date.today(), end=date.today()):
         return self.success(post(
@@ -75,9 +142,10 @@ class Signal(Net):
             text='',
             page=0,
             size=10,
-            sort=Sort.EN_DT,
+            sort=Sort.DT,
             desc=True
     ):
+
         return self.response(post(self.URL + self.SEARCH, headers=self.token.headers, params={
             'start': start,
             'end': end,
@@ -88,14 +156,11 @@ class Signal(Net):
             'desc': desc
         }))
 
-    def sample(self):
-        return self.response(post(self.URL + self.SAMPLE, headers=self.token.headers))
-
-class Ticker(Net):
-    ADD = '/pat/data/ticker/adds'
-    REMOVE = '/pat/data/ticker/removes'
-    CLEAR = '/pat/data/ticker/clear'
-    SEARCH = '/pat/ticker/search'
+class Universe(Net):
+    ADD = '/pat/score/universe/adds'
+    REMOVE = '/pat/score/universe/removes'
+    CLEAR = '/pat/score/universe/clear'
+    SEARCH = '/pat/score/universe/search'
 
     class Sort:
         PM = 'perma'
@@ -116,8 +181,14 @@ class Ticker(Net):
     def clear(self):
         return self.success(post(self.URL + self.CLEAR, headers=self.token.headers))
 
-    def search(self, text='', page=0, size=10, sort=Sort.TK, desc=False):
+    def search(self, exchange=None, category=None, sector=None, industry=None, location=None,
+               text='', page=0, size=10, sort=Sort.TK, desc=False):
         return self.response(post(self.URL + self.SEARCH, headers=self.token.headers, params={
+            'exchange': exchange,
+            'category': category,
+            'sector': sector,
+            'industry': industry,
+            'location': location,
             'text': text,
             'page': page,
             'size': size,
@@ -215,7 +286,7 @@ class Token(Net):
                 self.on_update(self.access, self.refresh)
 
     def set_access(self, data):
-        #print('set_access', data)
+        print('set_access', data)
         self.access = {
             'token': data['accessToken'],
             'type': data['grantType'],
