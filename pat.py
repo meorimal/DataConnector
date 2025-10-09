@@ -1,6 +1,6 @@
 from datetime import date, datetime, timedelta
 
-from requests import post
+from requests import post, get
 from requests.structures import CaseInsensitiveDict
 
 class Access:
@@ -12,7 +12,7 @@ class Access:
 
 class Net:
     # URL = 'https://lefuture.kr/futurebot/api'
-    URL = 'http://localhost:8080/api' #개발용
+    URL = 'http://localhost:8080/futurebot/api' #개발용
 
     def success(self, response) -> bool:
         json = self.response(response)
@@ -266,7 +266,7 @@ class Token(Net):
         headers['Content-Type'] = 'application/x-www-form-urlencoded'
         headers["authorization"] = self.get(self.refresh)
 
-        return self.response(post(self.URL + self.REISSUE, headers=headers))
+        return self.response(get(self.URL + self.REISSUE, headers=headers))
 
     def update_by_issue(self):
         data = self.issue
@@ -286,7 +286,7 @@ class Token(Net):
                 self.on_update(self.access, self.refresh)
 
     def set_access(self, data):
-        print('set_access', data)
+        #print('set_access', data)
         self.access = {
             'token': data['accessToken'],
             'type': data['grantType'],
