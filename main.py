@@ -5,8 +5,7 @@ VERSION = "0.0.4"
 
 # 가입한 이메일(ID) / 비밀번호 입력
 # 유료이용자/관리자 권한 필요 (검색은 사용자 권한)
-# pta = pat.Access('test@test.com', '00000')
-pta = pat.Access('main@meorimal.com', '12345')
+pta = pat.Access('test@test.com', '00000')
 
 # 예제
 def prompt(name):
