@@ -1,11 +1,12 @@
 #모듈
 import pat
 
-VERSION = "0.0.3"
+VERSION = "0.0.4"
 
 # 가입한 이메일(ID) / 비밀번호 입력
 # 유료이용자/관리자 권한 필요 (검색은 사용자 권한)
-pta = pat.Access('test@test.com', '00000')
+# pta = pat.Access('test@test.com', '00000')
+pta = pat.Access('main@meorimal.com', '12345')
 
 # 예제
 def prompt(name):
@@ -66,12 +67,26 @@ def prompt(name):
 
         case 'pat uni a':
             pat_universe_add()
+        case 'pat uni k':
+            pat_universe_kor()
         case 'pat uni r':
             pat_universe_remove()
         case 'pat uni c':
             pat_universe_clear()
         case 'pat uni s':
             pat_universe_search()
+
+        case 'pat fac a':
+            pat_factor_add()
+        case 'pat fac rd':
+            pat_factor_remove_by_date()
+        case 'pat fac s':
+            pat_factor_search()
+
+        case 'pat col a':
+            pat_column_add()
+        case 'pat col r':
+            pat_column_remove()
 
     return True
 
@@ -140,9 +155,8 @@ def pat_search(tp):
     # 정렬기준(sort) PM=permaticker, TK=ticker, NM=이름, DT=날짜, PRC=가격,
     # EN_DT=매입일, EN_PRC=매입가격, SCR=점수, RT=수익률, RV=변경시간, CR=생성시간
     rst = pta.daily.search(
-        start='2025-08-01',
-        end='2025-08-31',
-        text='IR',
+        start='2025-10-01',
+        end='2025-10-30',
         page=0,
         size=10,
         sort=pat.Daily.Sort.DT,
@@ -161,18 +175,18 @@ def pat_sample(tp):
 
 # 종목 점수 추가
 def pat_score_add():
-    # [[date, permaticker, close, score]]
+    # [[date, ticker, close, score, mmt, smb, beta, vol, returns, dev, period]]
     rst = pta.score.adds([
-        ["2025-08-28", "110688", "1.72", "1.0"],
-        ["2025-08-28", "121744", "5.56", "1.0"],
-        ["2025-08-28", "124440", "1.22", "1.0"]
+        ["2025-08-28", "110688", "1.72", "1.0", "1.0", "1.0", "1.0", "1.0", "0", "0", "0"],
+        ["2025-08-28", "121744", "5.56", "1.0", "1.0", "1.0", "1.0", "1.0", "0", "0", "0"],
+        ["2025-08-28", "124440", "1.22", "1.0", "1.0", "1.0", "1.0", "1.0", "0", "0", "0"]
     ])
     # 결과값 bool
     print(rst)
 
 # 종목 점수 삭제
 def pat_score_remove():
-    # [[date, permaticker]]
+    # [[date, ticker]]
     rst = pta.score.removes([
         ["2025-08-28", "110688"],
         ["2025-08-28", "121744"],
@@ -213,26 +227,37 @@ def pat_universe_add():
     #  sicindustry, famasector, famaindustry, sector, industry,
     #  scalemarketcap, scalerevenue, relatedtickers, currency, location,
     #  lastupdated, firstadded, firstpricedate, lastpricedate, firstquarter,
-    #  lastquarter, secfilings, companysite]
+    #  lastquarter, secfilings, companysite, nameKor]
     rst = pta.universe.adds([
         ["114929", "ASL", "ASHANTI GOLDFIELDS CO LTD", "SEP", "NYSE",
          "Y", "ADR Common Stock", "43743202", "1040", "Mining",
          "Gold And Silver Ores", "", "", "Basic Materials", "Gold",
          "", "", "", "USD", "Ghana",
          "10/16/18", "9/19/18", "2/22/96", "4/23/04", "",
-         "", "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001008136", ""],
+         "", "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001008136", "", ""],
         ["115164", "BROA", "BROKAT TECHNOLOGIES AKTIENGESELLSCHAFT", "SEP", "NASDAQ",
          "Y", "ADR Common Stock", "112080205", "7372", "Services",
          "Services-Prepackaged Software", "", "", "Technology", "Software - Application",
          "", "", "", "USD", "Germany",
          "10/16/18", "9/15/18", "10/4/00", "11/21/01", "",
-         "", "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001071486", ""],
+         "", "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001071486", "", ""],
         ["103863", "DANOY", "GROUPE DANONE", "SEP", "NYSE",
          "Y", "ADR Common Stock", "399449107 23636T100", "2000", "Manufacturing",
          "Food And Kindred Products", "", "", "Consumer Defensive", "Packaged Foods",
          "", "", "GDNNY DA", "USD", "France",
          "8/7/23", "7/12/20", "11/18/96", "7/13/07", "",
-         "", "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001048515", ""]
+         "", "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001048515", "", ""]
+    ])
+    # 결과값 bool
+    print(rst)
+
+# 종목정보 한글명추가
+def pat_universe_kor():
+    # [ticker, name]
+    rst = pta.universe.adds([
+        ["AACB", "아티어스II애퀴지션"],
+        ["TNDM", "탠덤다이어비츠케어"],
+        ["EVR", "에버코어"]
     ])
     # 결과값 bool
     print(rst)
@@ -258,18 +283,73 @@ def pat_universe_search():
     # 결과값 json (API 문서 참고)
     print(rst)
 
+# 팩터 추가
+def pat_factor_add():
+    # [date, mmt, smb, beta, vol]
+    rst = pta.factor.adds([
+        ["2025-09-25", "0.34", "-0.39", "-0.31", "0.58"],
+        ["2025-09-26", "-0.20", "0.13", "0.26", "-0.28"],
+        ["2025-09-29", "-0.06", "-0.22", "0.24", "-0.56"]
+    ])
+    # 결과값 bool
+    print(rst)
+
+# 팩터 삭제
+def pat_factor_remove_by_date():
+    # 파라미터 start=시작일, end=마지막일
+    rst = pta.factor.removes_by_date('2025-08-01', '2025-08-05')
+    # 결과값 bool
+    print(rst)
+
+# 팩터 검색
+def pat_factor_search():
+    # 파라미터 start=시작일, end=마지막일,
+    # text=검색어, page=페이지번호, size=페이지당출력갯수, sort=정렬기준, desc=역순여부
+    # 정렬기준(sort) DT=날짜, MM=모멘텀, SM=SMB, BE=베타, VO=Low Volatility,
+    # SCR=점수, RV=변경시간, CR=생성시간
+    rst = pta.factor.search(
+        start='2025-08-01',
+        end='2025-08-31',
+        page=0,
+        size=10,
+        sort=pat.Factor.Sort.DT,
+        desc=True
+    )
+    # 결과값 json (API 문서 참고)
+    print(rst)
+
+# 칼럼 추가
+def pat_column_add():
+    # title=제목, msg=내용, link=외부링크, section=주제구분, open=게시여부, date=날짜
+    rst = pta.column.add(
+        title="test title",
+        msg="text msg",
+        dt="2025-11-01"
+    )
+    # 결과값 json (API 문서 참고)
+    print(rst)
+
+# 칼럼 삭제
+def pat_column_remove():
+    # [id]
+    rst = pta.column.removes(['id1','id2','id3'])
+    # 결과값 bool
+    print(rst)
+
 if __name__ == '__main__':
     print('Welcome! Data Connector! v' + VERSION)
     print('[e] 종료')
 
-    print('[pat a b] 매입 산호 추가, [pat a s] 처분 산호 추가, [pat a h] 보유 산호 추가')
-    print('[pat r b] 매입 산호 삭제, [pat r s] 처분 산호 삭제, [pat r h] 보유 산호 삭제, ')
-    print('[pat rd b] 매입 산호 날짜기준 삭제, [pat rd s] 처분 산호 날짜기준 삭제, [pat rd h] 보유 산호 날짜기준 삭제')
+    print('[pat a b] 매입 신호 추가, [pat a s] 처분 신호 추가, [pat a h] 보유 신호 추가')
+    print('[pat r b] 매입 신호 삭제, [pat r s] 처분 신호 삭제, [pat r h] 보유 신호 삭제, ')
+    print('[pat rd b] 매입 신호 날짜기준 삭제, [pat rd s] 처분 신호 날짜기준 삭제, [pat rd h] 보유 신호 날짜기준 삭제')
     print('[pat c b] 매입 신호 전체삭제, [pat c s] 처분 신호 전체삭제, [pat c h] 보유 신호 전체삭제')
     print('[pat s b] 매입 신호 검색, [pat s s] 처분 신호 검색, [pat s h] 보유 신호 검색')
     print('[pat sp b] 체험용 매입 신호 보기 [pat sp s] 체험용 처분 신호 보기 [pat sp h] 체험용 보유 신호 보기')
     print('[pat scr a] 종목점수 추가, [pat scr r] 종목점수 삭제, [pat scr rd] 종목점수 날짜기준 삭제, [pat scr s] 종목점수 검색')
-    print('[pat uni a] 종목정보 추가, [pat uni r] 종목정보 삭제, [pat uni c] 종목정보 전체삭제, [pat uni s] 종목정보 검색')
+    print('[pat uni a] 종목정보 추가, [pat uni k] 종목정보 한글명추가, [pat uni r] 종목정보 삭제, [pat uni c] 종목정보 전체삭제, [pat uni s] 종목정보 검색')
+    print('[pat fac a] 팩터 추가, [pat fac rd] 팩터 날짜기준 삭제, [pat fac s] 팩터 검색')
+    print('[pat col a] 칼럼 추가, [pat col r] 칼럼 삭제')
 
     while True:
         if not prompt(input('dc : ')):

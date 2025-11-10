@@ -9,10 +9,12 @@ class Access:
         self.daily = Daily(token)
         self.score = Score(token)
         self.universe = Universe(token)
+        self.factor = Factor(token)
+        self.column = Column(token)
 
 class Net:
-    # URL = 'https://lefuture.kr/futurebot/api'
-    URL = 'http://localhost:8080/futurebot/api' #개발용
+    # URL = 'https://lefuture.kr/home/api'
+    URL = 'http://localhost:8080/home/api' #개발용
 
     def success(self, response) -> bool:
         json = self.response(response)
@@ -158,6 +160,7 @@ class Score(Net):
 
 class Universe(Net):
     ADD = '/pat/score/universe/adds'
+    KOR = '/pat/score/universe/edit/name/kor'
     REMOVE = '/pat/score/universe/removes'
     CLEAR = '/pat/score/universe/clear'
     SEARCH = '/pat/score/universe/search'
@@ -174,6 +177,9 @@ class Universe(Net):
 
     def adds(self, data):
         return self.success(post(self.URL + self.ADD, headers=self.token.headers_by_json, json={'list': data}))
+
+    def kor(self, data):
+        return self.success(post(self.URL + self.KOR, headers=self.token.headers_by_json, json={'list': data}))
 
     def removes(self, ids):
         return self.success(post(self.URL + self.REMOVE, headers=self.token.headers, params={'ids': ids}))
@@ -195,6 +201,69 @@ class Universe(Net):
             'sort': sort,
             'desc': desc
         }))
+
+class Factor(Net):
+    ADD = '/pat/factor/adds'
+    REMOVE_DT = '/pat/factor/removes/date'
+    SEARCH = '/pat/factor/search'
+
+    class Sort:
+        DT = 'date'
+        MM = 'mmt'
+        SM = 'smb'
+        BE = 'beta'
+        VO = 'vol'
+
+    def __init__(self, token):
+        self.token: Token = token
+
+    def adds(self, data):
+        return self.success(post(self.URL + self.ADD, headers=self.token.headers_by_json, json={'list': data}))
+
+    def removes_by_date(self, start=date.today(), end=date.today()):
+        return self.success(post(
+            self.URL + self.REMOVE_DT,
+            headers=self.token.headers,
+            params={'start': start, 'end': end}
+        ))
+
+    def search(self, start=None, end=None, days=None,
+               text='', page=0, size=10, sort=Sort.DT, desc=False):
+        return self.response(post(self.URL + self.SEARCH, headers=self.token.headers, params={
+            'start': start,
+            'end': end,
+            'days': days,
+            'text': text,
+            'page': page,
+            'size': size,
+            'sort': sort,
+            'desc': desc
+        }))
+
+class Column(Net):
+    ADD = '/pat/column/add'
+    REMOVE = '/pat/column/removes'
+
+    class Sort:
+        DT = 'date'
+        TI = 'title'
+        SE = 'section'
+
+    def __init__(self, token):
+        self.token: Token = token
+
+    def add(self, title, msg, dt, link=None, section=None, op=None):
+        return self.response(post(self.URL + self.ADD, headers=self.token.headers, params={
+            'title': title,
+            'msg': msg,
+            'link': link,
+            'section': section,
+            'open': op,
+            'date': dt
+        }))
+
+    def removes(self, ids):
+        return self.success(post(self.URL + self.REMOVE, headers=self.token.headers, params={'ids': ids}))
 
 class Token(Net):
     TEMP = '/user/remember/set'
@@ -286,7 +355,7 @@ class Token(Net):
                 self.on_update(self.access, self.refresh)
 
     def set_access(self, data):
-        #print('set_access', data)
+        print('set_access', data)
         self.access = {
             'token': data['accessToken'],
             'type': data['grantType'],
