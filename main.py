@@ -1,7 +1,7 @@
 #모듈
 import pat
 
-VERSION = "0.0.4"
+VERSION = "0.0.6"
 
 # 가입한 이메일(ID) / 비밀번호 입력
 # 유료이용자/관리자 권한 필요 (검색은 사용자 권한)
@@ -47,13 +47,6 @@ def prompt(name):
             pat_search(pat.Daily.Type.SELL)
         case 'pat s h':
             pat_search(pat.Daily.Type.HOLD)
-
-        case 'pat sp b':
-            pat_sample(pat.Daily.Type.BUY)
-        case 'pat sp s':
-            pat_sample(pat.Daily.Type.SELL)
-        case 'pat sp h':
-            pat_sample(pat.Daily.Type.HOLD)
 
         case 'pat scr a':
             pat_score_add()
@@ -165,20 +158,13 @@ def pat_search(tp):
     # 결과값 json (API 문서 참고)
     print(rst)
 
-# 체험용 신호 보기
-def pat_sample(tp):
-    # 파라미터 tp=(BUY: 매입, SELL: 처분, HOLD: 보유)
-    rst = pta.daily.sample(tp)
-    # 결과값 json (API 문서 참고)
-    print(rst)
-
 # 종목 점수 추가
 def pat_score_add():
-    # [[date, ticker, close, score, mmt, smb, beta, vol, returns, dev, period]]
+    # [[[date, ticker, score, mmt, smb, beta, vol, group, close, lower, upper]]]
     rst = pta.score.adds([
-        ["2025-08-28", "110688", "1.72", "1.0", "1.0", "1.0", "1.0", "1.0", "0", "0", "0"],
-        ["2025-08-28", "121744", "5.56", "1.0", "1.0", "1.0", "1.0", "1.0", "0", "0", "0"],
-        ["2025-08-28", "124440", "1.22", "1.0", "1.0", "1.0", "1.0", "1.0", "0", "0", "0"]
+        ["2025-08-28", "110688", "1.0", "1.0", "1.0", "1.0", "1.0", "top", "1.72", "100", "200"],
+        ["2025-08-28", "121744", "1.0", "1.0", "1.0", "1.0", "1.0", "top", "5.56", "100", "200"],
+        ["2025-08-28", "124440", "1.0", "1.0", "1.0", "1.0", "1.0", "top", "01.22", "100", "200"]
     ])
     # 결과값 bool
     print(rst)
@@ -344,7 +330,6 @@ if __name__ == '__main__':
     print('[pat rd b] 매입 신호 날짜기준 삭제, [pat rd s] 처분 신호 날짜기준 삭제, [pat rd h] 보유 신호 날짜기준 삭제')
     print('[pat c b] 매입 신호 전체삭제, [pat c s] 처분 신호 전체삭제, [pat c h] 보유 신호 전체삭제')
     print('[pat s b] 매입 신호 검색, [pat s s] 처분 신호 검색, [pat s h] 보유 신호 검색')
-    print('[pat sp b] 체험용 매입 신호 보기 [pat sp s] 체험용 처분 신호 보기 [pat sp h] 체험용 보유 신호 보기')
     print('[pat scr a] 종목점수 추가, [pat scr r] 종목점수 삭제, [pat scr rd] 종목점수 날짜기준 삭제, [pat scr s] 종목점수 검색')
     print('[pat uni a] 종목정보 추가, [pat uni k] 종목정보 한글명추가, [pat uni r] 종목정보 삭제, [pat uni c] 종목정보 전체삭제, [pat uni s] 종목정보 검색')
     print('[pat fac a] 팩터 추가, [pat fac rd] 팩터 날짜기준 삭제, [pat fac s] 팩터 검색')

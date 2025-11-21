@@ -41,7 +41,6 @@ class Daily(Net):
     REMOVE_DT = '/pat/daily/removes/date'
     CLEAR = '/pat/daily/clear'
     SEARCH = '/pat/daily/search'
-    SAMPLE = '/pat/daily/sample'
 
     class Type:
         BUY = 'BUY'
@@ -101,9 +100,6 @@ class Daily(Net):
             'sort': sort,
             'desc': desc
         }))
-
-    def sample(self, tp=Type.BUY):
-        return self.response(post(self.URL + self.SAMPLE + '/' + tp, headers=self.token.headers))
 
 class Score(Net):
     ADD = '/pat/score/adds'
