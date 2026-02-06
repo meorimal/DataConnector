@@ -10,7 +10,7 @@ class Access:
         self.score = Score(token)
         self.universe = Universe(token)
         self.factor = Factor(token)
-        self.column = Column(token)
+        #self.column = Column(token)
 
 class Net:
     # URL = 'https://lefuture.kr/home/api'
