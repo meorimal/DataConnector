@@ -15,6 +15,10 @@ class Access:
 class Net:
     # URL = 'https://lefuture.kr/home/api'
     URL = 'http://localhost:8080/home/api' #개발용
+    FOLDER = '/pat'
+
+    def path(self, nation):
+        return self.URL + self.FOLDER + '/' + nation
 
     def success(self, response) -> bool:
         json = self.response(response)
@@ -35,12 +39,16 @@ class Net:
 
         return None
 
+class Nation:
+    KR = 'KR'
+    US = 'US'
+
 class Daily(Net):
-    ADD = '/pat/daily/adds'
-    REMOVE = '/pat/daily/removes'
-    REMOVE_DT = '/pat/daily/removes/date'
-    CLEAR = '/pat/daily/clear'
-    SEARCH = '/pat/daily/search'
+    ADD = '/daily/adds'
+    REMOVE = '/daily/removes'
+    REMOVE_DT = '/daily/removes/date'
+    CLEAR = '/daily/clear'
+    SEARCH = '/daily/search'
 
     class Type:
         BUY = 'BUY'
@@ -63,21 +71,21 @@ class Daily(Net):
     def __init__(self, token):
         self.token: Token = token
 
-    def adds(self, data, tp=Type.BUY):
-        return self.success(post(self.URL + self.ADD + '/' + tp, headers=self.token.headers_by_json, json={'list': data}))
+    def adds(self, data, tp=Type.BUY, nation=Nation.KR):
+        return self.success(post(self.path(nation) + self.ADD + '/' + tp, headers=self.token.headers_by_json, json={'list': data}))
 
-    def removes(self, ids):
-        return self.success(post(self.URL + self.REMOVE, headers=self.token.headers_by_json, json={'list': ids}))
+    def removes(self, ids, nation=Nation.KR):
+        return self.success(post(self.path(nation) + self.REMOVE, headers=self.token.headers_by_json, json={'list': ids}))
 
-    def removes_by_date(self, start=date.today(), end=date.today(), tp=Type.BUY):
+    def removes_by_date(self, start=date.today(), end=date.today(), tp=Type.BUY, nation=Nation.KR):
         return self.success(post(
-            self.URL + self.REMOVE_DT + '/' + tp,
+            self.path(nation) + self.REMOVE_DT + '/' + tp,
             headers=self.token.headers,
             params={'start': start, 'end': end}
         ))
 
-    def clear(self, tp=Type.BUY):
-        return self.success(post(self.URL + self.CLEAR + '/' + tp, headers=self.token.headers))
+    def clear(self, tp=Type.BUY, nation=Nation.KR):
+        return self.success(post(self.path(nation) + self.CLEAR + '/' + tp, headers=self.token.headers))
 
     def search(
             self,
@@ -88,10 +96,11 @@ class Daily(Net):
             size=10,
             sort=Sort.EN_DT,
             desc=True,
-            tp=Type.BUY
+            tp=Type.BUY,
+            nation=Nation.KR
     ):
 
-        return self.response(post(self.URL + self.SEARCH + '/' + tp, headers=self.token.headers, params={
+        return self.response(post(self.path(nation) + self.SEARCH + '/' + tp, headers=self.token.headers, params={
             'start': start,
             'end': end,
             'text': text,
@@ -102,13 +111,12 @@ class Daily(Net):
         }))
 
 class Score(Net):
-    ADD = '/pat/score/adds'
-    REMOVE = '/pat/score/removes'
-    REMOVE_DT = '/pat/score/removes/date'
-    SEARCH = '/pat/score/search'
+    ADD = '/score/adds'
+    REMOVE = '/score/removes'
+    REMOVE_DT = '/score/removes/date'
+    SEARCH = '/score/search'
 
     class Sort:
-        PM = 'perma'
         TK = 'ticker'
         NM = 'name'
         DT = 'date'
@@ -120,15 +128,15 @@ class Score(Net):
     def __init__(self, token):
         self.token: Token = token
 
-    def adds(self, data):
-        return self.success(post(self.URL + self.ADD, headers=self.token.headers_by_json, json={'list': data}))
+    def adds(self, data, nation=Nation.KR):
+        return self.success(post(self.path(nation) + self.ADD, headers=self.token.headers_by_json, json={'list': data}))
 
-    def removes(self, ids):
-        return self.success(post(self.URL + self.REMOVE, headers=self.token.headers_by_json, json={'list': ids}))
+    def removes(self, ids, nation=Nation.KR):
+        return self.success(post(self.path(nation) + self.REMOVE, headers=self.token.headers_by_json, json={'list': ids}))
 
-    def removes_by_date(self, start=date.today(), end=date.today()):
+    def removes_by_date(self, start=date.today(), end=date.today(), nation=Nation.KR):
         return self.success(post(
-            self.URL + self.REMOVE_DT,
+            self.path(nation) + self.REMOVE_DT,
             headers=self.token.headers,
             params={'start': start, 'end': end}
         ))
@@ -141,10 +149,11 @@ class Score(Net):
             page=0,
             size=10,
             sort=Sort.DT,
-            desc=True
+            desc=True,
+            nation=Nation.KR
     ):
 
-        return self.response(post(self.URL + self.SEARCH, headers=self.token.headers, params={
+        return self.response(post(self.path(nation) + self.SEARCH, headers=self.token.headers, params={
             'start': start,
             'end': end,
             'text': text,
@@ -155,42 +164,37 @@ class Score(Net):
         }))
 
 class Universe(Net):
-    ADD = '/pat/score/universe/adds'
-    KOR = '/pat/score/universe/edit/name/kor'
-    REMOVE = '/pat/score/universe/removes'
-    CLEAR = '/pat/score/universe/clear'
-    SEARCH = '/pat/score/universe/search'
+    ADD = '/score/universe/adds'
+    KOR = '/score/universe/edit/name/kor'
+    REMOVE = '/score/universe/removes'
+    CLEAR = '/score/universe/clear'
+    SEARCH = '/score/universe/search'
 
     class Sort:
-        PM = 'perma'
         TK = 'ticker'
         NM = 'name'
         RV = 'revision'
         CR = 'creation'
 
-    def __init__(self, token):
+    def __init__(self, token, nation=Nation.KR):
         self.token: Token = token
 
-    def adds(self, data):
-        return self.success(post(self.URL + self.ADD, headers=self.token.headers_by_json, json={'list': data}))
+    def adds(self, data, nation=Nation.KR):
+        return self.success(post(self.path(nation) + self.ADD, headers=self.token.headers_by_json, json={'list': data}))
 
-    def kor(self, data):
-        return self.success(post(self.URL + self.KOR, headers=self.token.headers_by_json, json={'list': data}))
+    def kor(self, data, nation=Nation.KR):
+        return self.success(post(self.path(nation) + self.KOR, headers=self.token.headers_by_json, json={'list': data}))
 
-    def removes(self, ids):
-        return self.success(post(self.URL + self.REMOVE, headers=self.token.headers, params={'ids': ids}))
+    def removes(self, ids, nation=Nation.KR):
+        return self.success(post(self.path(nation) + self.REMOVE, headers=self.token.headers, params={'ids': ids}))
 
-    def clear(self):
-        return self.success(post(self.URL + self.CLEAR, headers=self.token.headers))
+    def clear(self, nation=Nation.KR):
+        return self.success(post(self.path(nation) + self.CLEAR, headers=self.token.headers))
 
-    def search(self, exchange=None, category=None, sector=None, industry=None, location=None,
-               text='', page=0, size=10, sort=Sort.TK, desc=False):
-        return self.response(post(self.URL + self.SEARCH, headers=self.token.headers, params={
+    def search(self, exchange=None, sector=None, text='', page=0, size=10, sort=Sort.TK, desc=False, nation=Nation.KR):
+        return self.response(post(self.path(nation) + self.SEARCH, headers=self.token.headers, params={
             'exchange': exchange,
-            'category': category,
             'sector': sector,
-            'industry': industry,
-            'location': location,
             'text': text,
             'page': page,
             'size': size,
@@ -199,9 +203,9 @@ class Universe(Net):
         }))
 
 class Factor(Net):
-    ADD = '/pat/factor/adds'
-    REMOVE_DT = '/pat/factor/removes/date'
-    SEARCH = '/pat/factor/search'
+    ADD = '/factor/adds'
+    REMOVE_DT = '/factor/removes/date'
+    SEARCH = '/factor/search'
 
     class Sort:
         DT = 'date'
@@ -213,19 +217,19 @@ class Factor(Net):
     def __init__(self, token):
         self.token: Token = token
 
-    def adds(self, data):
-        return self.success(post(self.URL + self.ADD, headers=self.token.headers_by_json, json={'list': data}))
+    def adds(self, data, nation=Nation.KR):
+        return self.success(post(self.path(nation) + self.ADD, headers=self.token.headers_by_json, json={'list': data}))
 
-    def removes_by_date(self, start=date.today(), end=date.today()):
+    def removes_by_date(self, start=date.today(), end=date.today(), nation=Nation.KR):
         return self.success(post(
-            self.URL + self.REMOVE_DT,
+            self.path(nation) + self.REMOVE_DT,
             headers=self.token.headers,
             params={'start': start, 'end': end}
         ))
 
     def search(self, start=None, end=None, days=None,
-               text='', page=0, size=10, sort=Sort.DT, desc=False):
-        return self.response(post(self.URL + self.SEARCH, headers=self.token.headers, params={
+               text='', page=0, size=10, sort=Sort.DT, desc=False, nation=Nation.KR):
+        return self.response(post(self.path(nation) + self.SEARCH, headers=self.token.headers, params={
             'start': start,
             'end': end,
             'days': days,
@@ -236,30 +240,30 @@ class Factor(Net):
             'desc': desc
         }))
 
-class Column(Net):
-    ADD = '/pat/column/add'
-    REMOVE = '/pat/column/removes'
-
-    class Sort:
-        DT = 'date'
-        TI = 'title'
-        SE = 'section'
-
-    def __init__(self, token):
-        self.token: Token = token
-
-    def add(self, title, msg, dt, link=None, section=None, op=None):
-        return self.response(post(self.URL + self.ADD, headers=self.token.headers, params={
-            'title': title,
-            'msg': msg,
-            'link': link,
-            'section': section,
-            'open': op,
-            'date': dt
-        }))
-
-    def removes(self, ids):
-        return self.success(post(self.URL + self.REMOVE, headers=self.token.headers, params={'ids': ids}))
+# class Column(Net):
+#     ADD = '/pat/column/add'
+#     REMOVE = '/pat/column/removes'
+#
+#     class Sort:
+#         DT = 'date'
+#         TI = 'title'
+#         SE = 'section'
+#
+#     def __init__(self, token):
+#         self.token: Token = token
+#
+#     def add(self, title, msg, dt, link=None, section=None, op=None):
+#         return self.response(post(self.URL + self.ADD, headers=self.token.headers, params={
+#             'title': title,
+#             'msg': msg,
+#             'link': link,
+#             'section': section,
+#             'open': op,
+#             'date': dt
+#         }))
+#
+#     def removes(self, ids):
+#         return self.success(post(self.URL + self.REMOVE, headers=self.token.headers, params={'ids': ids}))
 
 class Token(Net):
     TEMP = '/user/remember/set'

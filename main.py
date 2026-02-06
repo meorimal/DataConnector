@@ -1,11 +1,13 @@
 #모듈
 import pat
 
-VERSION = "0.0.6"
+VERSION = "0.0.7"
 
 # 가입한 이메일(ID) / 비밀번호 입력
 # 유료이용자/관리자 권한 필요 (검색은 사용자 권한)
 pta = pat.Access('test@test.com', '00000')
+
+# 모든 함수에는 nation 파라미터가 있습니다. 국내주식은 KR, 미국주식은 US 를 입력합니다
 
 # 예제
 def prompt(name):
@@ -75,10 +77,10 @@ def prompt(name):
         case 'pat fac s':
             pat_factor_search()
 
-        case 'pat col a':
-            pat_column_add()
-        case 'pat col r':
-            pat_column_remove()
+        # case 'pat col a':
+        #     pat_column_add()
+        # case 'pat col r':
+        #     pat_column_remove()
 
     return True
 
@@ -89,7 +91,7 @@ def pat_add_buy():
         ["2025-09-18", "ABAT", "2.9563", "1.0"],
         ["2025-09-18", "QSI", "1.525", "1.0"],
         ["2025-09-22", "MTSR", "53.75", "1.0"]
-    ])
+    ], nation=pat.Nation.KR)    # 국내: KR, 미국: US
     # 결과값 bool
     print(rst)
 
@@ -207,31 +209,11 @@ def pat_score_search():
 
 # 종목정보 추가
 def pat_universe_add():
-    # [permaticker, ticker, name, table, exchange,
-    #  isdelisted, category, cusips, siccode, sicsector,
-    #  sicindustry, famasector, famaindustry, sector, industry,
-    #  scalemarketcap, scalerevenue, relatedtickers, currency, location,
-    #  lastupdated, firstadded, firstpricedate, lastpricedate, firstquarter,
-    #  lastquarter, secfilings, companysite, nameKor]
+    # [ticker, name, exchange, sector, nameKor]
     rst = pta.universe.adds([
-        ["114929", "ASL", "ASHANTI GOLDFIELDS CO LTD", "SEP", "NYSE",
-         "Y", "ADR Common Stock", "43743202", "1040", "Mining",
-         "Gold And Silver Ores", "", "", "Basic Materials", "Gold",
-         "", "", "", "USD", "Ghana",
-         "10/16/18", "9/19/18", "2/22/96", "4/23/04", "",
-         "", "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001008136", "", ""],
-        ["115164", "BROA", "BROKAT TECHNOLOGIES AKTIENGESELLSCHAFT", "SEP", "NASDAQ",
-         "Y", "ADR Common Stock", "112080205", "7372", "Services",
-         "Services-Prepackaged Software", "", "", "Technology", "Software - Application",
-         "", "", "", "USD", "Germany",
-         "10/16/18", "9/15/18", "10/4/00", "11/21/01", "",
-         "", "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001071486", "", ""],
-        ["103863", "DANOY", "GROUPE DANONE", "SEP", "NYSE",
-         "Y", "ADR Common Stock", "399449107 23636T100", "2000", "Manufacturing",
-         "Food And Kindred Products", "", "", "Consumer Defensive", "Packaged Foods",
-         "", "", "GDNNY DA", "USD", "France",
-         "8/7/23", "7/12/20", "11/18/96", "7/13/07", "",
-         "", "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001048515", "", ""]
+        ["ASL", "ASHANTI GOLDFIELDS CO LTD", "NYSE", "Basic Materials", ""],
+        ["BROA", "BROKAT TECHNOLOGIES AKTIENGESELLSCHAFT", "NASDAQ", "Technology", ""],
+        ["DANOY", "GROUPE DANONE", "NYSE", "Consumer Defensive", ""]
     ])
     # 결과값 bool
     print(rst)
@@ -249,8 +231,8 @@ def pat_universe_kor():
 
 # 종목정보 삭제
 def pat_universe_remove():
-    # [permaticker]
-    rst = pta.universe.removes(['114929','115164','103863'])
+    # [ticker]
+    rst = pta.universe.removes(['ASL','BROA','DANOY'])
     # 결과값 bool
     print(rst)
 
@@ -303,23 +285,23 @@ def pat_factor_search():
     # 결과값 json (API 문서 참고)
     print(rst)
 
-# 칼럼 추가
-def pat_column_add():
-    # title=제목, msg=내용, link=외부링크, section=주제구분, open=게시여부, date=날짜
-    rst = pta.column.add(
-        title="test title",
-        msg="text msg",
-        dt="2025-11-01"
-    )
-    # 결과값 json (API 문서 참고)
-    print(rst)
-
-# 칼럼 삭제
-def pat_column_remove():
-    # [id]
-    rst = pta.column.removes(['id1','id2','id3'])
-    # 결과값 bool
-    print(rst)
+# # 칼럼 추가
+# def pat_column_add():
+#     # title=제목, msg=내용, link=외부링크, section=주제구분, open=게시여부, date=날짜
+#     rst = pta.column.add(
+#         title="test title",
+#         msg="text msg",
+#         dt="2025-11-01"
+#     )
+#     # 결과값 json (API 문서 참고)
+#     print(rst)
+#
+# # 칼럼 삭제
+# def pat_column_remove():
+#     # [id]
+#     rst = pta.column.removes(['id1','id2','id3'])
+#     # 결과값 bool
+#     print(rst)
 
 if __name__ == '__main__':
     print('Welcome! Data Connector! v' + VERSION)
