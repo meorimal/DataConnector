@@ -1,7 +1,11 @@
 from datetime import date, datetime, timedelta
-
 from requests import post, get
 from requests.structures import CaseInsensitiveDict
+
+import pandas as pd
+import websocket
+import json
+import math
 
 class Access:
     def __init__(self, email, pwd):
@@ -11,19 +15,24 @@ class Access:
         self.universe = Universe(token)
         self.factor = Factor(token)
         #self.column = Column(token)
+        self.market = Market(token)
 
 class Net:
     # URL = 'https://lefuture.kr/home/api'
     URL = 'http://localhost:8080/home/api' #개발용
+
+    # WS_URL = 'wss://lefuture.kr/home/api/socket'
+    WS_URL = 'ws://localhost:8080/home/api/socket'  # 개발용
+
     FOLDER = '/pat'
 
     def path(self, nation):
         return self.URL + self.FOLDER + '/' + nation
 
     def success(self, response) -> bool:
-        json = self.response(response)
+        rst = self.response(response)
         try:
-            return False if json is None else json['success']
+            return False if rst is None else rst['success']
         except KeyError:
             return False
 
@@ -38,6 +47,21 @@ class Net:
                 return json['data']
 
         return None
+
+    def post_by_slicing(self, df: pd.DataFrame, path, headers, size):
+        length = len(df)
+        for i in range(math.ceil(length / size)):
+            start = i * size
+            end = min(start + size, length)
+            data = df.iloc[start:end].values.tolist()
+            if not self.success(post(path, headers=headers, json={'list': data})):
+                return False
+
+        return True
+
+    def connect(self, path, headers):
+        # websocket.enableTrace(True)
+        return websocket.create_connection(self.WS_URL + self.FOLDER + path, header=dict(headers))
 
 class Nation:
     KR = 'KR'
@@ -54,6 +78,7 @@ class Daily(Net):
         BUY = 'BUY'
         SELL = 'SELL'
         HOLD = 'HOLD'
+        END = 'END'
 
     class Sort:
         PM = 'perma'
@@ -73,6 +98,14 @@ class Daily(Net):
 
     def adds(self, data, tp=Type.BUY, nation=Nation.KR):
         return self.success(post(self.path(nation) + self.ADD + '/' + tp, headers=self.token.headers_by_json, json={'list': data}))
+
+    def adds_by_slicing(self, df, tp=Type.BUY, nation=Nation.KR, size=1000):
+        return self.post_by_slicing(
+            df.astype({'date': str}),
+            self.path(nation) + self.ADD + '/' + tp,
+            headers=self.token.headers_by_json,
+            size=size
+        )
 
     def removes(self, ids, nation=Nation.KR):
         return self.success(post(self.path(nation) + self.REMOVE, headers=self.token.headers_by_json, json={'list': ids}))
@@ -131,6 +164,14 @@ class Score(Net):
     def adds(self, data, nation=Nation.KR):
         return self.success(post(self.path(nation) + self.ADD, headers=self.token.headers_by_json, json={'list': data}))
 
+    def adds_by_slicing(self, df, nation=Nation.KR, size=1000):
+        return self.post_by_slicing(
+            df.astype({'date': str}),
+            self.path(nation) + self.ADD,
+            headers=self.token.headers_by_json,
+            size=size
+        )
+
     def removes(self, ids, nation=Nation.KR):
         return self.success(post(self.path(nation) + self.REMOVE, headers=self.token.headers_by_json, json={'list': ids}))
 
@@ -182,8 +223,24 @@ class Universe(Net):
     def adds(self, data, nation=Nation.KR):
         return self.success(post(self.path(nation) + self.ADD, headers=self.token.headers_by_json, json={'list': data}))
 
+    def adds_by_slicing(self, df, nation=Nation.KR, size=1000):
+        return self.post_by_slicing(
+            df,
+            self.path(nation) + self.ADD,
+            headers=self.token.headers_by_json,
+            size=size
+        )
+
     def kor(self, data, nation=Nation.KR):
         return self.success(post(self.path(nation) + self.KOR, headers=self.token.headers_by_json, json={'list': data}))
+
+    def kor_by_slicing(self, df, nation=Nation.KR, size=1000):
+        return self.post_by_slicing(
+            df,
+            self.path(nation) + self.KOR,
+            headers=self.token.headers_by_json,
+            size=size
+        )
 
     def removes(self, ids, nation=Nation.KR):
         return self.success(post(self.path(nation) + self.REMOVE, headers=self.token.headers, params={'ids': ids}))
@@ -219,6 +276,14 @@ class Factor(Net):
 
     def adds(self, data, nation=Nation.KR):
         return self.success(post(self.path(nation) + self.ADD, headers=self.token.headers_by_json, json={'list': data}))
+
+    def adds_by_slicing(self, df, nation=Nation.KR, size=1000):
+        return self.post_by_slicing(
+            df.astype({'date': str}),
+            self.path(nation) + self.ADD,
+            headers=self.token.headers_by_json,
+            size=size
+        )
 
     def removes_by_date(self, start=date.today(), end=date.today(), nation=Nation.KR):
         return self.success(post(
@@ -264,6 +329,25 @@ class Factor(Net):
 #
 #     def removes(self, ids):
 #         return self.success(post(self.URL + self.REMOVE, headers=self.token.headers, params={'ids': ids}))
+
+class Market(Net):
+    def __init__(self, token):
+        self.token: Token = token
+        self.ws = None
+
+    def send_from_df(self, df, nation=Nation.KR):
+        return self.send(df.values.tolist(), nation)
+
+    def send(self, data, nation=Nation.KR):
+        if self.ws is None:
+            self.ws = self.connect('/market', self.token.headers)
+            self.ws.send(json.dumps({'auth': self.token.get_access, 'type': 'market_in'}))
+
+        return self.ws.send(json.dumps({'list': data, 'nation': nation}))
+
+    def close(self):
+        self.ws.close()
+        self.ws = None
 
 class Token(Net):
     TEMP = '/user/remember/set'

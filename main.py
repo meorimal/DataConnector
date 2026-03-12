@@ -1,7 +1,9 @@
 #모듈
+import pandas as pd
+import time
 import pat
 
-VERSION = "0.0.8"
+VERSION = "0.1.0"
 
 # 가입한 이메일(ID) / 비밀번호 입력
 # 유료이용자/관리자 권한 필요 (검색은 사용자 권한)
@@ -17,10 +19,20 @@ def prompt(name):
 
         case 'pat a b':
             pat_add_buy()
+        case 'pat a bs':
+            pat_add_buy_slicing()
         case 'pat a s':
             pat_add_sell()
+        case 'pat a ss':
+            pat_add_sell_slicing()
         case 'pat a h':
             pat_add_hold()
+        case 'pat a hs':
+            pat_add_hold_slicing()
+        case 'pat a e':
+            pat_add_end()
+        case 'pat a es':
+            pat_add_end_slicing()
 
         case 'pat r b':
             pat_remove(pat.Daily.Type.BUY)
@@ -52,6 +64,8 @@ def prompt(name):
 
         case 'pat scr a':
             pat_score_add()
+        case 'pat scr as':
+            pat_score_add_slicing()
         case 'pat scr r':
             pat_score_remove()
         case 'pat scr rd':
@@ -61,8 +75,12 @@ def prompt(name):
 
         case 'pat uni a':
             pat_universe_add()
+        case 'pat uni as':
+            pat_universe_add_slicing()
         case 'pat uni k':
             pat_universe_kor()
+        case 'pat uni ks':
+            pat_universe_kor_slicing()
         case 'pat uni r':
             pat_universe_remove()
         case 'pat uni c':
@@ -72,6 +90,8 @@ def prompt(name):
 
         case 'pat fac a':
             pat_factor_add()
+        case 'pat fac as':
+            pat_factor_add_by_slicing()
         case 'pat fac rd':
             pat_factor_remove_by_date()
         case 'pat fac s':
@@ -81,6 +101,9 @@ def prompt(name):
         #     pat_column_add()
         # case 'pat col r':
         #     pat_column_remove()
+
+        case 'pat mkt':
+            pat_market()
 
     return True
 
@@ -95,25 +118,80 @@ def pat_add_buy():
     # 결과값 bool
     print(rst)
 
+# 매입 신호 추가(분할)
+def pat_add_buy_slicing():
+    # [[date, ticker, price, score]]
+    rst = pta.daily.adds_by_slicing(pd.DataFrame([
+        ["2025-09-18", "ABAT", "2.9563", "1.0"],
+        ["2025-09-18", "QSI", "1.525", "1.0"],
+        ["2025-09-22", "MTSR", "53.75", "1.0"]
+    ], columns=['date', 'ticker', 'price', 'score']), nation=pat.Nation.KR)    # 국내: KR, 미국: US
+    # 결과값 bool
+    print(rst)
+
 # 처분 신호 추가
 def pat_add_sell():
-    # [[date, ticker, price, return]]
+    # [[date, ticker, price, return, period]]
     rst = pta.daily.adds([
+        ["2025-09-19", "ABAT", "3.3", "0.116260190102493", "10"],
+        ["2025-09-22", "QSI", "1.7", "0.114754098360656", "10"],
+        ["2025-09-23", "MTSR", "53.0", "-0.013953488372093", "10"]
+    ], tp=pat.Daily.Type.SELL)
+    # 결과값 bool
+    print(rst)
+
+# 처분 신호 추가(분할)
+def pat_add_sell_slicing():
+    # [[date, ticker, price, return]]
+    rst = pta.daily.adds_by_slicing(pd.DataFrame([
         ["2025-09-19", "ABAT", "3.3", "0.116260190102493"],
         ["2025-09-22", "QSI", "1.7", "0.114754098360656"],
         ["2025-09-23", "MTSR", "53.0", "-0.013953488372093"]
-    ], tp=pat.Daily.Type.SELL)
+    ], columns=['date', 'ticker', 'price', 'score']), tp=pat.Daily.Type.SELL)
     # 결과값 bool
     print(rst)
 
 # 보유 신호 추가
 def pat_add_hold():
-    # [[date, ticker, price, entry_date, entry_price, score, return]]
+    # [[date, ticker, price, entry_date, entry_price, return]]
     rst = pta.daily.adds([
-        ["2025-09-19", "ATYR", "0.9921", "2025-09-12", " 6.435", " 1.0", "-0.845827505827506"],
-        ["2025-09-19", "QSI", "1.5", "2025-09-18", "1.525", "1.0", "-0.0163934426229507"],
-        ["2025-09-22", "MTSR", "53.58", "2025-09-22", "53.75", "1.0", "-0.00316279069767444"]
+        ["2025-09-19", "ATYR", "0.9921", "2025-09-12", " 6.435", "-0.845827505827506"],
+        ["2025-09-19", "QSI", "1.5", "2025-09-18", "1.525", "-0.0163934426229507"],
+        ["2025-09-22", "MTSR", "53.58", "2025-09-22", "53.75", "-0.00316279069767444"]
     ], tp=pat.Daily.Type.HOLD)
+    # 결과값 bool
+    print(rst)
+
+# 보유 신호 추가(분할)
+def pat_add_hold_slicing():
+    # [[date, ticker, price, entry_date, entry_price, return]]
+    rst = pta.daily.adds_by_slicing(pd.DataFrame([
+        ["2025-09-19", "ATYR", "0.9921", "2025-09-12", " 6.435", "-0.845827505827506"],
+        ["2025-09-19", "QSI", "1.5", "2025-09-18", "1.525", "-0.0163934426229507"],
+        ["2025-09-22", "MTSR", "53.58", "2025-09-22", "53.75", "-0.00316279069767444"]
+    ], columns=['date', 'ticker', 'price', 'entry_date', 'entry_price', 'return']), tp=pat.Daily.Type.HOLD)
+    # 결과값 bool
+    print(rst)
+
+# 매매 완료 추가
+def pat_add_end():
+    # [[date, ticker, price, entry_date, entry_price, return, period]]
+    rst = pta.daily.adds([
+        ["2025-09-19", "ATYR", "0.9921", "2025-09-12", " 6.435", "-0.845827505827506", "10"],
+        ["2025-09-19", "QSI", "1.5", "2025-09-18", "1.525", "-0.0163934426229507", "10"],
+        ["2025-09-22", "MTSR", "53.58", "2025-09-22", "53.75", "-0.00316279069767444", "10"]
+    ], tp=pat.Daily.Type.END)
+    # 결과값 bool
+    print(rst)
+
+# 매매 완료 추가(분할)
+def pat_add_end_slicing():
+    # [[date, ticker, price, entry_date, entry_price, return, period]]
+    rst = pta.daily.adds_by_slicing(pd.DataFrame([
+        ["2025-09-19", "ATYR", "0.9921", "2025-09-12", " 6.435", "-0.845827505827506", "10"],
+        ["2025-09-19", "QSI", "1.5", "2025-09-18", "1.525", "-0.0163934426229507", "10"],
+        ["2025-09-22", "MTSR", "53.58", "2025-09-22", "53.75", "-0.00316279069767444", "10"]
+    ], columns=['date', 'ticker', 'price', 'entry_date', 'entry_price', 'return', 'period']), tp=pat.Daily.Type.END)
     # 결과값 bool
     print(rst)
 
@@ -171,6 +249,20 @@ def pat_score_add():
     # 결과값 bool
     print(rst)
 
+# 종목 점수 추가(분할)
+def pat_score_add_slicing():
+    # [[[date, ticker, score, mmt, smb, beta, vol, group, close, lower, upper, rebound, uptrend, decline, leaders]]]
+    rst = pta.score.adds_by_slicing(pd.DataFrame([
+        ["2025-08-28", "110688", "1.0", "1.0", "1.0", "1.0", "1.0", "top", "1.72", "100", "200", "10", "10", "10", "10"],
+        ["2025-08-28", "121744", "1.0", "1.0", "1.0", "1.0", "1.0", "top", "5.56", "100", "200", "10", "10", "10", "10"],
+        ["2025-08-28", "124440", "1.0", "1.0", "1.0", "1.0", "1.0", "top", "01.22", "100", "200", "10", "10", "10", "10"]
+    ], columns=['date', 'ticker', 'score', 'mmt', 'smb',
+                'beta', 'vol', 'group', 'close', 'lower',
+                'upper', 'rebound', 'uptrend', 'decline', 'leaders']))
+    print(rst)
+    # 결과값 bool
+    print(rst)
+
 # 종목 점수 삭제
 def pat_score_remove():
     # [[date, ticker]]
@@ -218,6 +310,17 @@ def pat_universe_add():
     # 결과값 bool
     print(rst)
 
+# 종목정보 추가(분할)
+def pat_universe_add_slicing():
+    # [ticker, name, exchange, sector, nameKor]
+    rst = pta.universe.adds_by_slicing(pd.DataFrame([
+        ["ASL", "ASHANTI GOLDFIELDS CO LTD", "NYSE", "Basic Materials", ""],
+        ["BROA", "BROKAT TECHNOLOGIES AKTIENGESELLSCHAFT", "NASDAQ", "Technology", ""],
+        ["DANOY", "GROUPE DANONE", "NYSE", "Consumer Defensive", ""]
+    ], columns=['ticker', 'name', 'exchange', 'sector', 'nameKor']))
+    # 결과값 bool
+    print(rst)
+
 # 종목정보 한글명추가
 def pat_universe_kor():
     # [ticker, name]
@@ -226,6 +329,17 @@ def pat_universe_kor():
         ["TNDM", "탠덤다이어비츠케어"],
         ["EVR", "에버코어"]
     ])
+    # 결과값 bool
+    print(rst)
+
+# 종목정보 한글명추가(분할)
+def pat_universe_kor_slicing():
+    # [ticker, name]
+    rst = pta.universe.adds_by_slicing(pd.DataFrame([
+        ["AACB", "아티어스II애퀴지션"],
+        ["TNDM", "탠덤다이어비츠케어"],
+        ["EVR", "에버코어"]
+    ], columns=['ticker', 'name']))
     # 결과값 bool
     print(rst)
 
@@ -261,6 +375,17 @@ def pat_factor_add():
     # 결과값 bool
     print(rst)
 
+# 팩터 추가(분할)
+def pat_factor_add_by_slicing():
+    # [date, mmt, smb, beta, vol]
+    rst = pta.factor.adds_by_slicing(pd.DataFrame([
+        ["2026-01-02", "0.34", "-0.39", "-0.31", "0.58"],
+        ["2026-01-05", "-0.20", "0.13", "0.26", "-0.28"],
+        ["2026-01-06", "-0.06", "-0.22", "0.24", "-0.56"]
+    ], columns=['date', 'mmt', 'smb', 'beta', 'vol']))
+    # 결과값 bool
+    print(rst)
+
 # 팩터 삭제
 def pat_factor_remove_by_date():
     # 파라미터 start=시작일, end=마지막일
@@ -285,6 +410,38 @@ def pat_factor_search():
     # 결과값 json (API 문서 참고)
     print(rst)
 
+# 실시간 시세 반영
+def pat_market():
+    # 테스트로 10번 반복
+    for i in range(10):
+        # 테스트를 위해 100원씩 가격 증가
+        add = i * 100
+        # 빈 배열을 전송할 경우 모든 실시간 데이터 초기화(삭제)
+        # [ticker, price]
+        data = [
+            ['A005930', 187700 + add],
+            ['A000660', 945000 + add],
+            ['A005380', 521500 + add],
+            ['A373220', 371500 + add],
+            ['A086520', 159300 + add],
+            ['A039490', 451000 + add],
+            ['A000100', 99200 + add]
+        ]
+        # rst = pta.market.send(data) # 파이션 리스트로 보내기
+        rst = pta.market.send_from_df(pd.DataFrame(
+            data,
+            columns=['ticker', 'price']
+        ))  # 판다스 데이터프레임으로 보내기
+
+        # 결과값 int
+        print(rst)
+
+        # 1초에 한번씩 갱신된다고 가정
+        time.sleep(1)
+
+    pta.market.close()  # 프로그램 종료시 소켓을 닫아줌
+    print('완료')
+
 # # 칼럼 추가
 # def pat_column_add():
 #     # title=제목, msg=내용, link=외부링크, section=주제구분, open=게시여부, date=날짜
@@ -307,15 +464,20 @@ if __name__ == '__main__':
     print('Welcome! Data Connector! v' + VERSION)
     print('[e] 종료')
 
-    print('[pat a b] 매입 신호 추가, [pat a s] 처분 신호 추가, [pat a h] 보유 신호 추가')
+    print('[pat a b] 매입 신호 추가, [pat a bs] 매입 신호 추가(분할), ')
+    print('[pat a s] 처분 신호 추가, [pat a ss] 처분 신호 추가(분할), ')
+    print('[pat a h] 보유 신호 추가, [pat a hs] 보유 신호 추가(분할), ')
+    print('[pat a e] 매매 완료 추가, [pat a es] 매매 완료 추가(분할), ')
     print('[pat r b] 매입 신호 삭제, [pat r s] 처분 신호 삭제, [pat r h] 보유 신호 삭제, ')
     print('[pat rd b] 매입 신호 날짜기준 삭제, [pat rd s] 처분 신호 날짜기준 삭제, [pat rd h] 보유 신호 날짜기준 삭제')
     print('[pat c b] 매입 신호 전체삭제, [pat c s] 처분 신호 전체삭제, [pat c h] 보유 신호 전체삭제')
     print('[pat s b] 매입 신호 검색, [pat s s] 처분 신호 검색, [pat s h] 보유 신호 검색')
-    print('[pat scr a] 종목점수 추가, [pat scr r] 종목점수 삭제, [pat scr rd] 종목점수 날짜기준 삭제, [pat scr s] 종목점수 검색')
-    print('[pat uni a] 종목정보 추가, [pat uni k] 종목정보 한글명추가, [pat uni r] 종목정보 삭제, [pat uni c] 종목정보 전체삭제, [pat uni s] 종목정보 검색')
-    print('[pat fac a] 팩터 추가, [pat fac rd] 팩터 날짜기준 삭제, [pat fac s] 팩터 검색')
-    print('[pat col a] 칼럼 추가, [pat col r] 칼럼 삭제')
+    print('[pat scr a] 종목점수 추가, [pat scr as] 종목점수 추가(분할), [pat scr r] 종목점수 삭제, [pat scr rd] 종목점수 날짜기준 삭제, [pat scr s] 종목점수 검색')
+    print('[pat uni a] 종목정보 추가, [pat uni as] 종목정보 추가(분할), [pat uni k] 종목정보 한글명추가, [pat uni ks] 종목정보 한글명추가(분할)')
+    print('[pat uni r] 종목정보 삭제, [pat uni c] 종목정보 전체삭제, [pat uni s] 종목정보 검색')
+    print('[pat fac a] 팩터 추가, [pat fac as] 팩터 추가(분할), [pat fac rd] 팩터 날짜기준 삭제, [pat fac s] 팩터 검색')
+    # print('[pat col a] 칼럼 추가, [pat col r] 칼럼 삭제')
+    print('[pat mkt] 실시간 시세 반영')
 
     while True:
         if not prompt(input('dc : ')):
