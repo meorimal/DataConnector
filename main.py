@@ -3,13 +3,13 @@ import pandas as pd
 import time
 import pat
 
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 
 # 가입한 이메일(ID) / 비밀번호 입력
 # 유료이용자/관리자 권한 필요 (검색은 사용자 권한)
 pta = pat.Access('test@test.com', '00000')
 
-# 모든 함수에는 nation 파라미터가 있습니다. 국내주식은 KR, 미국주식은 US 를 입력합니다
+# 모든 함수에는 nation 파라미터가 있습니다. 국내주식은 KR, 국내ETF는 KR_ETF, 미국주식은 US 를 입력합니다
 
 # 예제
 def prompt(name):
@@ -114,7 +114,7 @@ def pat_add_buy():
         ["2025-09-18", "ABAT", "2.9563", "1.0"],
         ["2025-09-18", "QSI", "1.525", "1.0"],
         ["2025-09-22", "MTSR", "53.75", "1.0"]
-    ], nation=pat.Nation.KR)    # 국내: KR, 미국: US
+    ], nation=pat.Nation.KR_ETF)    # 국내: KR, 국내ETF: KR_ETF, 미국: US
     # 결과값 bool
     print(rst)
 
@@ -125,7 +125,7 @@ def pat_add_buy_slicing():
         ["2025-09-18", "ABAT", "2.9563", "1.0"],
         ["2025-09-18", "QSI", "1.525", "1.0"],
         ["2025-09-22", "MTSR", "53.75", "1.0"]
-    ], columns=['date', 'ticker', 'price', 'score']), nation=pat.Nation.KR)    # 국내: KR, 미국: US
+    ], columns=['date', 'ticker', 'price', 'score']), nation=pat.Nation.KR)    # 국내: KR, 국내ETF: KR_ETF, 미국: US
     # 결과값 bool
     print(rst)
 
@@ -415,17 +415,20 @@ def pat_market():
     # 테스트로 10번 반복
     for i in range(10):
         # 테스트를 위해 100원씩 가격 증가
-        add = i * 100
+        if i < 3:
+            add = 100
+        else:
+            add = i * 100
         # 빈 배열을 전송할 경우 모든 실시간 데이터 초기화(삭제)
         # [ticker, price]
         data = [
-            ['A005930', 187700 + add],
-            ['A000660', 945000 + add],
-            ['A005380', 521500 + add],
-            ['A373220', 371500 + add],
-            ['A086520', 159300 + add],
-            ['A039490', 451000 + add],
-            ['A000100', 99200 + add]
+            ['A229000', 3835 + add],
+            ['A078150', 4530 + add],
+            ['A003470', 7460 + add],
+            ['A161580', 58200 + add],
+            ['A189860', 9750 + add],
+            ['A950250', 6040 + add],
+            ['A475830', 85500 + add]
         ]
         # rst = pta.market.send(data) # 파이션 리스트로 보내기
         rst = pta.market.send_from_df(pd.DataFrame(
@@ -437,7 +440,7 @@ def pat_market():
         print(rst)
 
         # 1초에 한번씩 갱신된다고 가정
-        time.sleep(1)
+        time.sleep(5)
 
     pta.market.close()  # 프로그램 종료시 소켓을 닫아줌
     print('완료')

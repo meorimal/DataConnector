@@ -65,6 +65,7 @@ class Net:
 
 class Nation:
     KR = 'KR'
+    KR_ETF = 'KR/etf'
     US = 'US'
 
 class Daily(Net):
@@ -94,6 +95,7 @@ class Daily(Net):
         CR = 'creation'
 
     def __init__(self, token):
+        super().__init__()
         self.token: Token = token
 
     def adds(self, data, tp=Type.BUY, nation=Nation.KR):
