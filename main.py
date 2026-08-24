@@ -3,7 +3,7 @@ import pandas as pd
 import time
 import pat
 
-VERSION = "0.1.1"
+VERSION = "0.1.2"
 
 # 가입한 이메일(ID) / 비밀번호 입력
 # 유료이용자/관리자 권한 필요 (검색은 사용자 권한)
@@ -96,6 +96,15 @@ def prompt(name):
             pat_factor_remove_by_date()
         case 'pat fac s':
             pat_factor_search()
+
+        case 'pat etf scr a':
+            pat_etf_score_add()
+        case 'pat etf scr as':
+            pat_etf_score_add_slicing()
+        case 'pat etf the a':
+            pat_etf_theme_add()
+        case 'pat etf the as':
+            pat_etf_theme_add_by_slicing()
 
         # case 'pat col a':
         #     pat_column_add()
@@ -410,6 +419,51 @@ def pat_factor_search():
     # 결과값 json (API 문서 참고)
     print(rst)
 
+# ETF 종목 점수 추가
+def pat_etf_score_add():
+    # [[[date, ticker, score, close_5d_ret, value_change, group, current_price, lower_price, upper_price]]]
+    rst = pta.score.adds([
+        ["2026-08-20", "A0000J0", "0.484615385", "0.011688859", "0.109438831", "middle", "16791", "15875", "17675"],
+        ["2025-08-21", "A0000J0", "0.384615385", "0.013688859", "0.109438831", "middle", "16791", "15875", "17675"],
+        ["2025-08-24", "A0000J0", "0.284615385", "0.015688859", "0.109438831", "middle", "16791", "15875", "17675"]
+    ], nation=pat.Nation.KR_ETF)
+    # 결과값 bool
+    print(rst)
+
+# ETF 종목 점수 추가(분할)
+def pat_etf_score_add_slicing():
+    # [[[date, ticker, score, close_5d_ret, value_change, group, current_price, lower_price, upper_price]]]
+    rst = pta.score.adds_by_slicing(pd.DataFrame([
+        ["2026-08-20", "A0000J0", "0.484615385" , "0.011688859", "0.109438831" , "middle" , "16791", "15875", "17675"],
+        ["2025-08-21", "A0000J0", "0.384615385" , "0.013688859", "0.109438831" , "middle" , "16791", "15875", "17675"],
+        ["2025-08-24", "A0000J0", "0.284615385" , "0.015688859", "0.109438831" , "middle" , "16791", "15875", "17675"]
+    ], columns=['date', 'ticker', 'score', 'close_5d_ret', 'value_change',
+                'group', 'current_price', 'lower_price', 'upper_price']), nation=pat.Nation.KR_ETF)
+    # 결과값 bool
+    print(rst)
+
+# ETF 테마 추가
+def pat_etf_theme_add():
+    rst = pta.theme.adds([
+        ["2026-07-01", "Korea", "2차전지/배터리", "0.615060073", "8", "37519500000", "0.007849233", "0", "0.02051755", "1", "강세", "강세"],
+        ["2026-07-02", "Korea", "2차전지/배터리", "0.515060073", "7", "37519500000", "0.007849233", "0", "0.02051755", "1", "강세", "강세"],
+        ["2026-07-03", "Korea", "2차전지/배터리", "0.415060073", "6", "37519500000", "0.007849233", "0", "0.02051755", "1", "강세", "강세"]
+    ])
+    # 결과값 bool
+    print(rst)
+
+# ETF 테마 추가(분할)
+def pat_etf_theme_add_by_slicing():
+    rst = pta.theme.adds_by_slicing(pd.DataFrame([
+        ["2026-07-01", "Korea", "2차전지/배터리", "0.615060073", "8", "37519500000", "0.007849233", "0", "0.02051755", "1", "강세", "강세"],
+        ["2026-07-02", "Korea", "2차전지/배터리", "0.515060073", "7", "37519500000", "0.007849233", "0", "0.02051755", "1", "강세", "강세"],
+        ["2026-07-03", "Korea", "2차전지/배터리", "0.415060073", "6", "37519500000", "0.007849233", "0", "0.02051755", "1", "강세", "강세"]
+    ], columns=['date', 'region', 'theme_lv1', 'theme_score', 'theme_etf_count',
+                'theme_ma_5_value', 'theme_close_5d_ret', 'theme_close_5d_ret_score', 'theme_value_change',
+                'theme_value_change_score', 'regime', 'prev_regime']))
+    # 결과값 bool
+    print(rst)
+
 # 실시간 시세 반영
 def pat_market():
     # 테스트로 10번 반복
@@ -422,13 +476,17 @@ def pat_market():
         # 빈 배열을 전송할 경우 모든 실시간 데이터 초기화(삭제)
         # [ticker, price]
         data = [
-            ['A229000', 3835 + add],
-            ['A078150', 4530 + add],
-            ['A003470', 7460 + add],
-            ['A161580', 58200 + add],
-            ['A189860', 9750 + add],
-            ['A950250', 6040 + add],
-            ['A475830', 85500 + add]
+            # ['A229000', 3835 + add],
+            # ['A078150', 4530 + add],
+            # ['A003470', 7460 + add],
+            # ['A161580', 58200 + add],
+            # ['A189860', 9750 + add],
+            # ['A950250', 6040 + add],
+            # ['A475830', 85500 + add],
+            ['A0008T0', 17440 + add],
+            ['A0000J0', 28960 + add],
+            ['A0000Z0', 9340 + add],
+            ['A0001P0', 9480 + add]
         ]
         # rst = pta.market.send(data) # 파이션 리스트로 보내기
         rst = pta.market.send_from_df(pd.DataFrame(
@@ -479,6 +537,8 @@ if __name__ == '__main__':
     print('[pat uni a] 종목정보 추가, [pat uni as] 종목정보 추가(분할), [pat uni k] 종목정보 한글명추가, [pat uni ks] 종목정보 한글명추가(분할)')
     print('[pat uni r] 종목정보 삭제, [pat uni c] 종목정보 전체삭제, [pat uni s] 종목정보 검색')
     print('[pat fac a] 팩터 추가, [pat fac as] 팩터 추가(분할), [pat fac rd] 팩터 날짜기준 삭제, [pat fac s] 팩터 검색')
+    print('[pat etf scr a] 팩터 추가, [pat etf scr as] 팩터 추가(분할)')
+    print('[pat etf the a] 팩터 추가, [pat etf the as] 팩터 추가(분할)')
     # print('[pat col a] 칼럼 추가, [pat col r] 칼럼 삭제')
     print('[pat mkt] 실시간 시세 반영')
 

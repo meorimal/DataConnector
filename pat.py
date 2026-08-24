@@ -14,8 +14,10 @@ class Access:
         self.score = Score(token)
         self.universe = Universe(token)
         self.factor = Factor(token)
+        self.theme = Theme(token)
         #self.column = Column(token)
         self.market = Market(token)
+
 
 class Net:
     # URL = 'https://lefuture.kr/home/api'
@@ -306,6 +308,24 @@ class Factor(Net):
             'sort': sort,
             'desc': desc
         }))
+
+class Theme(Net):
+    ADD = '/theme/adds'
+
+    def __init__(self, token):
+        self.token: Token = token
+
+    def adds(self, data, nation=Nation.KR_ETF):
+        return self.success(
+            post(self.path(nation) + self.ADD, headers=self.token.headers_by_json, json={'list': data}))
+
+    def adds_by_slicing(self, df, nation=Nation.KR_ETF, size=1000):
+        return self.post_by_slicing(
+            df.astype({'date': str}),
+            self.path(nation) + self.ADD,
+            headers=self.token.headers_by_json,
+            size=size
+        )
 
 # class Column(Net):
 #     ADD = '/pat/column/add'
